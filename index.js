@@ -18,14 +18,30 @@ const fetch = async () => {
 		// iterate through listings
 		$('.css-u2ayx9').each((i, el) => {
 			const heading = $(el).find('h6').text()
-			const city = $(el).next().text().split('-')[0]
+			const city = $(el).next().text().split(' -')[0]
 			const price = $(el).text().slice(heading.length)
+			const link = 'https://www.olx.pl/' + $(el).closest('a').attr().href
 
 			// check if listing is already in the array
 			if (!items.includes(heading)) {
 				console.log(`Added listing: ${heading} ${price}`)
 				items.push(heading)
-				stream.write('Title: ' + heading + '\n' + 'Price: ' + price + '\n' + 'City: ' + city + '\n' + '\n' + '\n')
+				stream.write(
+					'Title: ' +
+						heading +
+						'\n' +
+						'Price: ' +
+						price +
+						'\n' +
+						'City: ' +
+						city +
+						'\n' +
+						'URL: ' +
+						link +
+						'\n' +
+						'\n' +
+						'\n'
+				)
 			}
 		})
 	} catch (err) {
