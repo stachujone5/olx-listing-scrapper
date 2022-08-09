@@ -1,10 +1,9 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import fs from 'fs'
+import { writeFileSync } from 'fs'
+import { v4 } from 'uuid'
 
-const stream = fs.createWriteStream('append.txt', { flags: 'a' })
-
-const items = []
+let items = []
 
 const fetch = async () => {
 	try {
@@ -17,31 +16,15 @@ const fetch = async () => {
 
 		// iterate through listings
 		$('.css-u2ayx9').each((i, el) => {
-			const heading = $(el).find('h6').text()
+			const title = $(el).find('h6').text()
 			const city = $(el).next().text().split(' -')[0]
-			const price = $(el).text().slice(heading.length)
+			const price = $(el).text().slice(title.length)
 			const link = 'https://www.olx.pl/' + $(el).closest('a').attr().href
+			const id = v4()
 
 			// check if listing is already in the array
-			if (!items.includes(heading)) {
-				console.log(`Added listing: ${heading} ${price}`)
-				items.push(heading)
-				stream.write(
-					'Title: ' +
-						heading +
-						'\n' +
-						'Price: ' +
-						price +
-						'\n' +
-						'City: ' +
-						city +
-						'\n' +
-						'URL: ' +
-						link +
-						'\n' +
-						'\n' +
-						'\n'
-				)
+			if (!items.find(i => i.link === link)) {
+				items.push({ id, title, city, price, link })
 			}
 		})
 	} catch (err) {
@@ -49,4 +32,10 @@ const fetch = async () => {
 	}
 }
 
-setInterval(() => fetch(), 5000)
+const updateJSON = () => {
+	writeFileSync('results.json', JSON.stringify(items))
+	items = []
+}
+
+setInterval(() => fetch(), 2500)
+setInterval(() => updateJSON(), 5000)
