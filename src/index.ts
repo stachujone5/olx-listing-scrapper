@@ -1,47 +1,51 @@
 import { writeFileSync } from 'fs'
 
-import axios from 'axios'
 import * as cheerio from 'cheerio'
 import { v4 } from 'uuid'
 
+import { fetch } from './helpers/fetch'
+import { parseDate } from './helpers/parseDate'
+
 interface Product {
   readonly city: string
+  readonly date: string
   readonly id: string
   readonly link: string
   readonly price: string
   readonly title: string
 }
 
+const URL = 'https://www.olx.pl/d/oferty/q-yeezy/?search%5Border%5D=created_at:desc'
+
 // eslint-disable-next-line -- need mutable array
 const items: Product[] = []
 
-const fetch = async () => {
-  try {
-    const { data } = await axios.get<string>('https://www.olx.pl/d/oferty/q-yeezy/?search%5Border%5D=created_at:desc')
-    const $ = cheerio.load(data)
+const scrap = async () => {
+  const html = await fetch<string>(URL)
+  const $ = cheerio.load(html)
 
-    // remove span with text and style tags
-    $('.css-e2218f').remove()
-    $('style').remove()
+  // remove span with text and style tags
+  $('.css-e2218f').remove()
+  $('style').remove()
 
-    // iterate through listings
-    $('.css-u2ayx9').each((i, el) => {
-      const title = $(el).find('h6').text()
-      const city = $(el).next().text().split(' -')[0]
-      const price = $(el).text().slice(title.length)
-      const link = 'https://www.olx.pl/' + $(el).closest('a').attr().href
-      const id = v4()
+  // iterate through listings
+  $('.css-u2ayx9').each((i, el) => {
+    const title = $(el).find('h6').text()
+    const price = $(el).text().slice(title.length)
+    const city = $(el).next().text().split(' -')[0]
+    const date = parseDate($(el).next().text().split(' - ')[1])
 
-      // check if listing is already in the array
-      if (!items.find(i => i.link === link)) {
-        items.push({ id, title, city, price, link })
-      }
-    })
+    // eslint-disable-next-line -- a wont be undefined here
+    const link = 'https://www.olx.pl/' + $(el).closest('a').attr()!.href
+    const id = v4()
 
-    writeFileSync('results.json', JSON.stringify(items))
-  } catch (err) {
-    console.log(err)
-  }
+    // check if listing is already in the array
+    if (!items.find(i => i.link === link) && date) {
+      items.push({ id, title, city, price, link, date })
+    }
+  })
+
+  writeFileSync('results.json', JSON.stringify(items))
 }
 
-void fetch()
+setInterval(() => scrap(), 30000)
