@@ -15,13 +15,13 @@ interface Product {
   readonly title: string
 }
 
-const URL = 'https://www.olx.pl/d/oferty/q-yeezy/?search%5Border%5D=created_at:desc'
+const QUERY = 'yeezy'
 
 // eslint-disable-next-line -- need mutable array
 const items: Product[] = []
 
 const scrap = async () => {
-  const html = await fetch<string>(URL)
+  const html = await fetch<string>(`https://www.olx.pl/d/oferty/q-${QUERY}/?search%5Border%5D=created_at:desc`)
   const $ = cheerio.load(html)
 
   // remove span with text and style tags
@@ -34,18 +34,19 @@ const scrap = async () => {
     const price = $(el).text().slice(title.length)
     const city = $(el).next().text().split(' -')[0]
     const date = parseDate($(el).next().text().split(' - ')[1])
-
-    // eslint-disable-next-line -- a wont be undefined here
+    // eslint-disable-next-line -- <a /> wont be undefined here
     const link = 'https://www.olx.pl/' + $(el).closest('a').attr()!.href
     const id = v4()
 
     // check if listing is already in the array
     if (!items.find(i => i.link === link) && date) {
       items.push({ id, title, city, price, link, date })
+
+      writeFileSync('results.json', JSON.stringify(items))
+
+      console.log('Added new item: ' + title + '  -------------------  ' + new Date().toLocaleTimeString())
     }
   })
-
-  writeFileSync('results.json', JSON.stringify(items))
 }
 
-setInterval(() => scrap(), 30000)
+setInterval(() => scrap(), 5000)
