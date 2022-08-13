@@ -10,9 +10,6 @@ export const parseDate = (date: string) => {
 
     const formatedDate = new Date(year, month, day, Number(hours), Number(minutes))
 
-    // parse date to UTC+1 timezone
-    formatedDate.setHours(formatedDate.getHours() + 2)
-
     return formatedDate.toLocaleString().slice(0, -3)
   }
 }

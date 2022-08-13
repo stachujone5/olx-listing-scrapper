@@ -18,7 +18,7 @@ interface Product {
 const QUERY = 'yeezy'
 
 // eslint-disable-next-line -- need mutable array
-const items: Product[] = []
+const products: Product[] = []
 
 const scrap = async () => {
   const html = await fetch<string>(`https://www.olx.pl/d/oferty/q-${QUERY}/?search%5Border%5D=created_at:desc`)
@@ -39,10 +39,10 @@ const scrap = async () => {
     const id = v4()
 
     // check if listing is already in the array
-    if (!items.find(i => i.link === link) && date) {
-      items.push({ id, title, city, price, link, date })
+    if (!products.find(i => i.link === link) && date) {
+      products.push({ id, title, city, price, link, date })
 
-      writeFileSync('results.json', JSON.stringify(items))
+      writeFileSync('results.json', JSON.stringify(products))
 
       console.log('Added new item: ' + title + '  -------------------  ' + new Date().toLocaleTimeString())
     }
