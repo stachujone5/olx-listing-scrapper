@@ -15,6 +15,8 @@ interface Product {
   readonly title: string
 }
 
+process.env.TZ = 'Europe/Amsterdam' // set node tz to UTC-1
+
 const QUERY = 'yeezy'
 
 // eslint-disable-next-line -- need mutable array
